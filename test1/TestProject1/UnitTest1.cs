@@ -24,7 +24,7 @@ public class Tests
         };
 
         // NoReset assumes the app com.google.android is preinstalled on the emulator
-        driverOptions.AddAdditionalAppiumOption("noReset", false);
+        driverOptions.AddAdditionalAppiumOption("noReset", true);
         _driver = new AndroidDriver(serverUri, driverOptions, TimeSpan.FromSeconds(180));
         _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
         _wait = new WebDriverWait(_driver,TimeSpan.FromSeconds(30));
@@ -40,36 +40,49 @@ public class Tests
 
 //------------------------------------------------------------------- TESTS
 
-    [Test]
-    // Checks if the "No need, you are already a developer" pop up appears after clicking on android TV OS build
+    [Test] // Test 1: Confirm that the developer options are on. 
+    
         public void CheckDevOptions()
     {
      OpenApp("com.android.tv.settings","com.android.tv.settings.MainSettings");
-     ScrollDownAndClick("System");
-     ScrollDownAndClick("About");
-     ScrollDownAndClick("Android TV OS build");
+     ScrollDownToText("System",true);
+     ScrollDownToText("About",true);
+     ScrollDownToText("Android TV OS build",true);
+     bool visible = IsToastWithTextVisible("No need, you are already a developer");
 
-     if(IsToastWithTextVisible("No need, you are already a developer"))
+     if(visible)
      {
         Console.WriteLine("DEV OPTIONS ENABLED");
      } 
+     else
+     {
+        Console.WriteLine("NO POP UP");
+     }
 
     }
 
-    [Test]
-    public void Test2()
+    [Test] //Test 2 confirm that bold text is off , if it isn't turn it off.
+    public void BoldCheck()
     {
+        OpenApp("com.android.tv.settings","com.android.tv.settings.MainSettings");    
+        ScrollDownToText("Accessibility",true);
 
+        IWebElement boldBox = ScrollDownToText("Bold text",false);
+        IWebElement boldCheck = boldBox.FindElement(By.XPath("//*[contains(@checkable, 'true')]"));
+        if(boldCheck.GetAttribute("checked") == "true")
+        {
+            _driver.PressKeyCode(AndroidKeyCode.Keycode_DPAD_CENTER);
+        }
+        else
+        {
+            Console.WriteLine("BOLD TEXT NOT ENABLED");
+        }
+        
     }
-
-
-
-
-
-
 
 
 //------------------------------------------------------------------ CONTROL METHODS
+    //Not really neccessary, I just didn't want to type _driver.StartActivity every time.
     public void OpenApp(string package,string activity)
     {
         _driver.StartActivity(package,activity);  
@@ -78,27 +91,29 @@ public class Tests
 
     public bool IsToastWithTextVisible(string text)
     {
+        WebDriverWait shortWait = new WebDriverWait(_driver,TimeSpan.FromSeconds(5));
         try
         {
-            IWebElement toast = _wait.Until(driver => driver.FindElement(By.XPath($"//android.widget.Toast[contains(@text, '{text}')]")));
+            IWebElement toast = shortWait.Until(driver => driver.FindElement(By.XPath($"//android.widget.Toast[contains(@text, '{text}')]")));
             return toast != null;
         }
-
         catch(NoSuchElementException)
         {
-            Console.WriteLine("TOAST NOT FOUND");
             return false;
         }
         catch(StaleElementReferenceException)
-        {
-            Console.WriteLine("TOAST NOT FOUND");
+        { 
             return false;
+        }
+        catch (WebDriverTimeoutException)
+        {
+            return false; 
         }
     }
 
 
-
-        public void ScrollDownAndClick(string text)
+        //Takes a string text and bool click and scrolls down until it finds it and presses DPAD Center if specified to do so.
+        public IWebElement ScrollDownToText(string text,bool click)
     {
         bool elementFound = false;
 
@@ -108,39 +123,23 @@ public class Tests
             IWebElement focusedElementText = focusedElement.FindElement(By.XPath(".//*[string-length(@text) > 0][1]"));
            if(focusedElementText.Text.Contains(text))
            {
-                _driver.PressKeyCode(AndroidKeyCode.Keycode_DPAD_CENTER);
+                if(click)
+                {
+                    _driver.PressKeyCode(AndroidKeyCode.Keycode_DPAD_CENTER);
+                }
+                
                 elementFound = true;
+                return focusedElement;
            }
            else 
            {
-            Console.WriteLine("FOCUSED ELEMENT: {0}",focusedElement);
+            //Console.WriteLine("FOCUSED ELEMENT: {0}",focusedElement);
             _driver.PressKeyCode(AndroidKeyCode.Keycode_DPAD_DOWN);
             Thread.Sleep(1000);
            }
         }
-
+        return _driver.FindElement(By.XPath("//*[@focused='true']"));
     }  
 
-
-
-
-    /*
-        for (int i = 0; i < 5; i++)
-        {
-          _driver.PressKeyCode(AndroidKeyCode.Keycode_DPAD_DOWN);
-          Thread.Sleep(1000);
-        }
-
-        IWebElement focusedElement = _driver.FindElement(By.XPath("//*[@focused='true']"));
-        Console.WriteLine(focusedElement.Text);
-        */
- /*
-      IWebElement systemButton = wait.Until(_driver => _driver.FindElement(By.XPath("//*[contains(@text, 'System')]")));
-      systemButton.Click();
-      
-      IWebElement aboutButton = wait.Until(_driver => _driver.FindElement(By.XPath("//*[contains(@text,'About')]")));
-      Thread.Sleep(1000);
-      aboutButton.Click();
-*/
-
+    
 }

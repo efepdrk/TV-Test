@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Smmz/tMgVJ8=",
+  "dgSpecHash": "UrIDyWaYyLU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\efepd\\Desktop\\test1\\TestProject1\\TestProject1.csproj",
+  "projectFilePath": "C:\\Users\\efepd\\Documents\\GitHub\\TV-Test\\test1\\TestProject1\\TestProject1.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\efepd\\.nuget\\packages\\appium.webdriver\\6.0.1\\appium.webdriver.6.0.1.nupkg.sha512",
     "C:\\Users\\efepd\\.nuget\\packages\\coverlet.collector\\6.0.2\\coverlet.collector.6.0.2.nupkg.sha512",
